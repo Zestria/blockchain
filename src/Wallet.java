@@ -1,26 +1,50 @@
 package src;
-// разумается настоящий секретный ключ куда длиньше, но мы для примера будем брать небольшие(до 6 знаков)
+
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
+
 public class Wallet {
-    private int privateKey;
-    private int publicKey;
+    private KeyPair keys;
+    private SecureRandom secureRandom;
     
-    Wallet(int key) {
-        this.privateKey = key;
-        this.publicKey = 0; // Сгенерирование из секретного ключа
+    Wallet() throws NoSuchAlgorithmException {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("DSA"); // NoSuchAlgorithmException
+        generator.initialize(1024);
+        keys = generator.generateKeyPair();
+        
+        secureRandom = new SecureRandom();
+        
     }
-    Wallet() {
-        this.privateKey = generatePrivateKey(); // Сгенерирование рандомного ключа
-        this.publicKey = 0; // Сгенерирование из секретного ключа
+    public PublicKey getPublicKey() {
+        return this.keys.getPublic();
     }
-    
-    public int getPrivateKey() {
-        return privateKey;
+    byte[] sign(byte[] data) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        Signature signature = Signature.getInstance("SHA256WithDSA"); // NoSuchAlgorithmException
+        signature.initSign(keys.getPrivate(), secureRandom); // InvalidKeyException
+        signature.update(data); // SignatureException
+
+        return signature.sign();
     }
-    public int getPublicKey() {
-        return publicKey;
-    }
-    
-    public int generatePrivateKey() {
-        return (int) Math.round(Math.random()*1000000);
+
+    // Вообще ты не тут должен быть, но пока не знаю куда сунуть
+    // Думаю сделать общую функцию verifyTransaction в src/tools
+    boolean verifySign(byte[] data, byte[] digitalSignature) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        Signature signature = Signature.getInstance("SHA256WithDSA"); // NoSuchAlgorithmException
+        signature.initVerify(getPublicKey()); // InvalidKeyException
+        signature.update(data); // SignatureException
+        return signature.verify(digitalSignature); // SignatureException
     }
 }
+
+/*
+ * Короче, задача кошелька:
+ * 1. Создавать транзакции
+ * 2. Хранить информацию о своих UTXO
+ * 3. Показывать свой публичный ключ
+ */
