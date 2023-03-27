@@ -2,6 +2,7 @@ package src;
 
 class Block {
     int index;
+    int nonce;
     long timestamp;
     String data;
     String hashOfPrevBlock;
@@ -10,5 +11,6 @@ class Block {
         this.hashOfPrevBlock = hash;
         this.data = data;
         this.timestamp = System.currentTimeMillis();
+        this.nonce = 0;
     }
 }

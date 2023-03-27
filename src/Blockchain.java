@@ -44,18 +44,42 @@ class Blockchain {
     }   
     
     
-    String hashBlock(Block block) throws NoSuchAlgorithmException {
-        byte[] timestamp =  ByteBuffer.allocate(8).putLong(block.timestamp).array();
+    static String hashBlock(Block block) throws NoSuchAlgorithmException {
+        byte[] timestamp = ByteBuffer.allocate(8).putLong(block.timestamp).array();
         byte[] data = block.data.getBytes(StandardCharsets.UTF_8);
         byte[] prevHash = block.hashOfPrevBlock.getBytes(StandardCharsets.UTF_8);
+        
+        String hash = "";
+        do {
+            int count = 0;
+            byte[] nonce = ByteBuffer.allocate(4).putInt(block.nonce++).array(); // здесь то он плюсуется
+            
+            byte[] bytes = new byte[timestamp.length+data.length+prevHash.length+nonce.length];
+            for(byte b : timestamp) bytes[count++] = b;
+            for(byte b : nonce) bytes[count++] = b;
+            for(byte b : data) bytes[count++] = b;
+            for(byte b : prevHash) bytes[count++] = b;
+            hash = SHA256.hash(bytes);
+        } while(!hash.substring(0, 4).equals("aaaa"));
+        block.nonce--;
+        return hash;
+    }
+    static boolean validate(String hash, Block block) throws NoSuchAlgorithmException {
+        if(!hash.substring(0, 4).equals("aaaa"))return false;
+        
+        byte[] timestamp = ByteBuffer.allocate(8).putLong(block.timestamp).array();
+        byte[] data = block.data.getBytes(StandardCharsets.UTF_8);
+        byte[] prevHash = block.hashOfPrevBlock.getBytes(StandardCharsets.UTF_8);
+        byte[] nonce = ByteBuffer.allocate(4).putInt(block.nonce).array();
+        byte[] bytes = new byte[timestamp.length+data.length+prevHash.length+nonce.length];
         int count = 0;
-
-        byte[] bytes = new byte[timestamp.length+data.length+prevHash.length];
         for(byte b : timestamp) bytes[count++] = b;
+        for(byte b : nonce) bytes[count++] = b;
         for(byte b : data) bytes[count++] = b;
         for(byte b : prevHash) bytes[count++] = b;
-        
-        return SHA256.hash(bytes);
+        String hash2 = SHA256.hash(bytes);
+        if(!hash2.equals(hash)) return false;
+        return true;
     }
 
     public String toString() {
