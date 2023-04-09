@@ -1,12 +1,13 @@
 package src;
 
-
+import java.io.File;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        Blockchain slavius = new Blockchain("./blockchaindata");
-        slavius.getLastBlock();
-        slavius.createBlock("I've created block");
-        System.out.println(slavius.getLastBlock().prevHash);
+        File dir = new File("./database");
+        String[] files = dir.list();
+        System.out.println(files.length);
+        for(String file : files) System.out.println(file);
+
     }
 }
